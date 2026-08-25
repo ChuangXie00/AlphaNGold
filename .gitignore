@@ -1,0 +1,67 @@
+# =========================
+# Private project documentation
+/docs/
+# =========================
+
+
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Frontend / Node.js
+# =========================
+**/node_modules/
+**/dist/
+**/.vite/
+**/coverage/
+**/.eslintcache
+
+# =========================
+# Java / Maven
+# =========================
+**/target/
+*.class
+
+
+# =========================
+# Python
+# =========================
+**/__pycache__/
+*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.venv/
+**/venv/
+**/.coverage
+**/htmlcov/
+
+# =========================
+# IDE settings
+# =========================
+.idea/
+**/.idea/
+.vscode/
+**/.vscode/
+*.iml
+
+# =========================
+# Logs and temporary files
+# =========================
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# =========================
+# Operating system files
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
