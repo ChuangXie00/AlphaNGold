@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
     ) {
         return buildResponse(
                 HttpStatus.NOT_FOUND,
-                "RESOURSE_NOT_FOUND",
+                "RESOURCE_NOT_FOUND",
                 ex.getMessage(),
                 Map.of()
         );
