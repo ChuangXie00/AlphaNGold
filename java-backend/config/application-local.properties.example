@@ -1,0 +1,3 @@
+DATABASE_URL=jdbc:postgresql://localhost:5432/ang_dev
+DATABASE_USERNAME=ang_dev
+DATABASE_PASSWORD={your password}

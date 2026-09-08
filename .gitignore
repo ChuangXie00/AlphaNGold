@@ -12,6 +12,13 @@
 .env.*
 !.env.example
 
+
+# =========================
+# java back local DB config
+# =========================
+/java-backend/config/application-local.properties
+
+
 # =========================
 # Frontend / Node.js
 # =========================
