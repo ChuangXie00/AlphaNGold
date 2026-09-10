@@ -29,7 +29,7 @@ export class ApiClientError extends Error {
     error?: ApiErrorPayload,
   ) {
     super(message)
-    this.name = 'ApiClinetError'
+    this.name = 'ApiClientError'
     this.kind = kind
     this.status = status
     this.code = error?.code ?? kind

@@ -3,5 +3,25 @@
     "home": "主页",
     "assistant": "AI 分析助手",
     "dashboard": "黄金看板"
+  },
+  "main": {
+    "title": "AlphaNGold",
+    "intro": "项目、技术与实践经历。"
+  },
+  "projects": {
+    "title": "项目经历",
+    "loading": "正在加载项目…",
+    "empty": "暂无可展示的项目。",
+    "errorTitle": "项目加载失败",
+    "retry": "重新加载",
+    "techStack": "技术栈",
+    "openProject": "查看项目",
+    "errors": {
+      "network": "暂时无法连接，请检查网络后重试。",
+      "timeout": "请求超时，请重新加载。",
+      "unavailable": "项目内容暂时无法获取，请稍后重试。",
+      "invalidResponse": "项目数据暂时无法正常加载，请稍后重试。",
+      "unknown": "加载项目时出现问题，请重新加载。"
+    }
   }
 }

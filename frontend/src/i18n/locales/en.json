@@ -3,5 +3,25 @@
     "home": "Home",
     "assistant": "AI Assistant",
     "dashboard": "Gold Dashboard"
+  },
+  "main": {
+    "title": "AlphaNGold",
+    "intro": "Projects, technologies, and experience."
+  },
+  "projects": {
+    "title": "Projects",
+    "loading": "Loading projects…",
+    "empty": "No projects to display yet.",
+    "errorTitle": "Unable to load projects",
+    "retry": "Try again",
+    "techStack": "Tech stack",
+    "openProject": "View project",
+    "errors": {
+      "network": "Unable to connect. Please check your connection and try again.",
+      "timeout": "The request took too long. Please try again.",
+      "unavailable": "Projects are temporarily unavailable. Please try again later.",
+      "invalidResponse": "Project data could not be loaded correctly. Please try again later.",
+      "unknown": "Something went wrong while loading projects. Please try again."
+    }
   }
 }
