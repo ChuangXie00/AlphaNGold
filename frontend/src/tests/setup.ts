@@ -1,2 +1,22 @@
 import '@testing-library/jest-dom/vitest'
-import '../i18n'
+import { cleanup } from '@testing-library/react'
+import { afterEach, beforeEach, vi } from 'vitest'
+import i18n from '../i18n'
+
+beforeEach(async () => {
+  // Tests must opt into a mock response; never call a real backend by accident.
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() => Promise.reject(new Error('Unexpected fetch in test'))),
+  )
+  await i18n.changeLanguage('en')
+})
+
+afterEach(() => {
+  cleanup()
+  vi.useRealTimers()
+  vi.restoreAllMocks()
+  vi.resetAllMocks()
+  vi.unstubAllEnvs()
+  vi.unstubAllGlobals()
+})
