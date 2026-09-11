@@ -1,3 +1,10 @@
+import { useTranslation } from 'react-i18next'
+
 export default function AssistantPage() {
-  return <h1>AI Assistant — Coming in Phase 2</h1>
+  const { t } = useTranslation()
+  return (
+    <div className="simple-page">
+      <h1>{t('assistant.title')}</h1>
+    </div>
+  )
 }

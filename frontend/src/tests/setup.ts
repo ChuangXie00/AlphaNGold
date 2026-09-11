@@ -4,6 +4,7 @@ import { afterEach, beforeEach, vi } from 'vitest'
 import i18n from '../i18n'
 
 beforeEach(async () => {
+  localStorage.clear()
   // Tests must opt into a mock response; never call a real backend by accident.
   vi.stubGlobal(
     'fetch',
@@ -19,4 +20,6 @@ afterEach(() => {
   vi.resetAllMocks()
   vi.unstubAllEnvs()
   vi.unstubAllGlobals()
+  // Restore storage spies/globals first so exception tests cannot leak or break cleanup.
+  localStorage.clear()
 })

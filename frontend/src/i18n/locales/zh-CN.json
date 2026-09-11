@@ -2,14 +2,68 @@
   "nav": {
     "home": "主页",
     "assistant": "AI 分析助手",
-    "dashboard": "黄金看板"
+    "dashboard": "黄金看板",
+    "label": "主导航",
+    "brandHome": "AlphaNGold 首页",
+    "skipToContent": "跳到正文"
   },
+  "language": { "label": "界面语言" },
+  "footer": { "description": "带着好奇心，把小想法慢慢做出来。" },
+  "assistant": { "title": "AI 分析助手 — 将在 Phase 2 开放" },
+  "dashboard": { "title": "黄金看板 — 将在 Phase 3 开放" },
+  "notFound": { "title": "页面未找到" },
   "main": {
     "title": "AlphaNGold",
-    "intro": "项目、技术与实践经历。"
+    "eyebrow": "来自海底的个人作品集",
+    "name": "海绵宝宝",
+    "role": "白天做蟹黄堡，下班折腾小项目。",
+    "intro": "你好，我是海绵宝宝。从蟹堡王的厨房到代码里的小实验，我喜欢把日常遇到的问题做成能用的小工具。最好能在下一次抓水母之前完成。",
+    "viewProjects": "看看我的项目",
+    "getInTouch": "打个招呼",
+    "demoNote": "本页为海绵宝宝主题的虚构个人资料，仅供演示。",
+    "avatarAlt": "海绵宝宝的头像",
+    "avatarPlaceholder": "海绵宝宝的姓名缩写 SB",
+    "location": "比奇堡 · 海底世界",
+    "tagline": "准备好迎接下一场小冒险。",
+    "badge": "我准备好了！",
+    "background": {
+      "eyebrow": "01 / 关于我",
+      "title": "每一次冒险，都学一点新东西。",
+      "intro": "这份虚构的学习履历包括厨房协作、耐心排错，以及次数十分乐观的驾驶训练。",
+      "educationTitle": "泡芙老师的驾校",
+      "education": "持续进修导航、抗挫折与再试一次。毕业时间：仍在努力中。",
+      "workTitle": "蟹堡王 · 厨师兼周末开发爱好者",
+      "work": "构思点餐记录、排班安排和各种小工具，让同事们多一点安心休息的时间。"
+    },
+    "skills": {
+      "eyebrow": "02 / 我的工具箱",
+      "title": "从一个小想法，到一个能用的页面。",
+      "intro": "一块热情海绵的趣味技能清单。",
+      "frontend": "前端：做出连派大星都能轻松使用的点餐界面。",
+      "backend": "后端：让午餐订单在厨房里有条不紊地流转。",
+      "data": "数据：把蟹黄堡数量数清楚，把秘方保管好。",
+      "platformStack": "AlphaNGold 使用的技术"
+    },
+    "platform": {
+      "eyebrow": "04 / 关于这个网站",
+      "title": "AlphaNGold",
+      "description": "一个支持中英文的个人作品网站，也是一片持续生长的项目空间。当前版本将个人主页与项目经历放在一起，方便浏览与了解。",
+      "next": "接下来：Phase 2 开放黄金研究 AI 助手，Phase 3 加入黄金看板。"
+    },
+    "contact": {
+      "eyebrow": "05 / 投递一个漂流瓶",
+      "title": "好点子，在海底也能相遇。",
+      "description": "一个小工具、一个好奇的问题，或一场抓水母的邀请，都可以是新冒险的开始。",
+      "github": "GitHub（示例）",
+      "linkedin": "LinkedIn（示例）",
+      "email": "电子邮箱（示例）",
+      "demoNote": "以下链接与邮箱仅为示例，并非真实联系方式。"
+    }
   },
   "projects": {
     "title": "项目经历",
+    "eyebrow": "03 / 最近在做的小东西",
+    "intro": "从比奇堡的日常生活出发，把脑洞变成小项目。",
     "loading": "正在加载项目…",
     "empty": "暂无可展示的项目。",
     "errorTitle": "项目加载失败",

@@ -1,3 +1,10 @@
+import { useTranslation } from 'react-i18next'
+
 export default function DashboardPage() {
-  return <h1>Gold Dashboard — Coming in Phase 3</h1>
+  const { t } = useTranslation()
+  return (
+    <div className="simple-page">
+      <h1>{t('dashboard.title')}</h1>
+    </div>
+  )
 }

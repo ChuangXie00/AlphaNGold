@@ -2,14 +2,68 @@
   "nav": {
     "home": "Home",
     "assistant": "AI Assistant",
-    "dashboard": "Gold Dashboard"
+    "dashboard": "Gold Dashboard",
+    "label": "Main navigation",
+    "brandHome": "AlphaNGold home",
+    "skipToContent": "Skip to content"
   },
+  "language": { "label": "Interface language" },
+  "footer": { "description": "A little curiosity. A lot to build." },
+  "assistant": { "title": "AI Assistant — Coming in Phase 2" },
+  "dashboard": { "title": "Gold Dashboard — Coming in Phase 3" },
+  "notFound": { "title": "Page not found" },
   "main": {
     "title": "AlphaNGold",
-    "intro": "Projects, technologies, and experience."
+    "eyebrow": "A portfolio from under the sea",
+    "name": "SpongeBob SquarePants",
+    "role": "Fry cook by day. Curious builder after hours.",
+    "intro": "Hi, I'm SpongeBob. From the kitchen at the Krusty Krab to small experiments in code, I like turning everyday problems into things that work. Preferably before the next jellyfishing trip.",
+    "viewProjects": "Explore projects",
+    "getInTouch": "Say hello",
+    "demoNote": "A fictional SpongeBob portfolio, created for this demo.",
+    "avatarAlt": "SpongeBob's profile picture",
+    "avatarPlaceholder": "SpongeBob's initials, SB",
+    "location": "Bikini Bottom · Under the sea",
+    "tagline": "Ready for the next small adventure.",
+    "badge": "I'm ready!",
+    "background": {
+      "eyebrow": "01 / A little background",
+      "title": "Learning, one adventure at a time.",
+      "intro": "My fictional learning journey includes kitchen teamwork, patient debugging, and an optimistic number of driving lessons.",
+      "educationTitle": "Mrs. Puff's Boating School",
+      "education": "Continuing studies in navigation, resilience, and trying again. Graduation date: a work in progress.",
+      "workTitle": "Krusty Krab · Fry cook & weekend builder",
+      "work": "Imagining order trackers, shift planners, and tiny tools that give the crew more time for a well-earned break."
+    },
+    "skills": {
+      "eyebrow": "02 / The toolbox",
+      "title": "From a small idea to a working page.",
+      "intro": "A playful skill set for a very enthusiastic sea sponge.",
+      "frontend": "Frontend: order screens even Patrick can navigate.",
+      "backend": "Backend: keeping lunch orders moving through the kitchen.",
+      "data": "Data: counting patties without losing the recipe.",
+      "platformStack": "Technologies used in AlphaNGold"
+    },
+    "platform": {
+      "eyebrow": "04 / About this site",
+      "title": "AlphaNGold",
+      "description": "A bilingual portfolio and a growing space for projects. This first version brings together a personal homepage and project experiences.",
+      "next": "Next up: a gold research AI assistant in Phase 2, followed by a Gold Dashboard in Phase 3."
+    },
+    "contact": {
+      "eyebrow": "05 / Drop a message in a bottle",
+      "title": "Good ideas travel, even underwater.",
+      "description": "A tiny tool, a curious question, or a jellyfishing invitation — there's always room for a new adventure.",
+      "github": "GitHub (demo)",
+      "linkedin": "LinkedIn (demo)",
+      "email": "Email (demo)",
+      "demoNote": "Example links and email only; these are not real contact details."
+    }
   },
   "projects": {
     "title": "Projects",
+    "eyebrow": "03 / Things I've been building",
+    "intro": "Small experiments inspired by everyday life in Bikini Bottom.",
     "loading": "Loading projects…",
     "empty": "No projects to display yet.",
     "errorTitle": "Unable to load projects",

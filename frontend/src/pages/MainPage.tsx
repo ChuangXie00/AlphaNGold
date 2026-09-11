@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { platformTechnologies, profile } from '../config/profile'
 import { ApiClientError } from '../services/apiClient'
 import { getMyProjExpList } from '../services/myProjExpService'
 import type { MyProjExp } from '../services/types'
@@ -15,9 +16,8 @@ type ErrorMessageKey =
 type ProjectsState =
   | { status: 'loading' }
   | { status: 'empty' }
-  | { status: 'success'; data: MyProjExp[]}
+  | { status: 'success'; data: MyProjExp[] }
   | { status: 'error'; messageKey: ErrorMessageKey }
-
 
 // save key for i18n translation
 function getErrorMessageKey(error: unknown): ErrorMessageKey {
@@ -44,8 +44,7 @@ function getErrorMessageKey(error: unknown): ErrorMessageKey {
   }
 }
 
-
-function getProjectUrl(value: string | null) : string | null {
+function getProjectUrl(value: string | null): string | null {
   if (!value?.trim()) {
     return null
   }
@@ -67,7 +66,7 @@ export default function MainPage() {
   const { t, i18n } = useTranslation()
 
   const [state, setState] = useState<ProjectsState>({
-    status: 'loading'
+    status: 'loading',
   })
 
   // Every time retry increases, trigger effect to fetch again
@@ -83,7 +82,7 @@ export default function MainPage() {
     async function loadProjects() {
       try {
         const projects = await getMyProjExpList({
-          signal: controller.signal
+          signal: controller.signal,
         })
 
         // when the request was suc, do not update the page
@@ -96,7 +95,7 @@ export default function MainPage() {
         } else {
           setState({
             status: 'success',
-            data: projects
+            data: projects,
           })
         }
       } catch (error: unknown) {
@@ -104,15 +103,12 @@ export default function MainPage() {
           return
         }
 
-        if  (
-          error instanceof ApiClientError &&
-          error.kind === 'ABORTED'
-        ) {
+        if (error instanceof ApiClientError && error.kind === 'ABORTED') {
           return
         }
         setState({
           status: 'error',
-          messageKey: getErrorMessageKey(error)
+          messageKey: getErrorMessageKey(error),
         })
       }
     }
@@ -126,22 +122,90 @@ export default function MainPage() {
   }, [requestVersion])
 
   function handleRetry() {
-    setState({ status: 'loading'})
+    setState({ status: 'loading' })
     setRequestVersion((current) => current + 1)
   }
 
   return (
     <div className="main-page">
       <header className="main-page__header">
-        <h1>{t('main.title')}</h1>
-        <p>{t('main.intro')}</p>
+        <div className="hero-copy">
+          <p className="eyebrow">{t('main.eyebrow')}</p>
+          <h1>{t('main.name')}</h1>
+          <p className="hero-role">{t('main.role')}</p>
+          <p className="hero-intro">{t('main.intro')}</p>
+          <div className="hero-actions">
+            <a className="button button--primary" href="#projects">
+              {t('main.viewProjects')}
+            </a>
+            <a className="button button--secondary" href="#contact">
+              {t('main.getInTouch')}
+            </a>
+          </div>
+          <p className="demo-note">{t('main.demoNote')}</p>
+        </div>
+        <div className="profile-card">
+          {profile.avatarUrl ? (
+            <img
+              className="profile-avatar"
+              src={profile.avatarUrl}
+              alt={t('main.avatarAlt')}
+              width="160"
+              height="160"
+            />
+          ) : (
+            <div
+              className="profile-avatar profile-avatar--initials"
+              role="img"
+              aria-label={t('main.avatarPlaceholder')}
+            >
+              <span aria-hidden="true">{profile.initials}</span>
+            </div>
+          )}
+          <p className="profile-card__location">{t('main.location')}</p>
+          <p className="profile-card__tagline">{t('main.tagline')}</p>
+          <span className="profile-card__badge">{t('main.badge')}</span>
+        </div>
       </header>
 
-      <section
-        className="projects-section"
-        aria-labelledby="projects-heading"
-      >
+      <div className="background-grid">
+        <section className="content-section" aria-labelledby="background-heading">
+          <p className="eyebrow">{t('main.background.eyebrow')}</p>
+          <h2 id="background-heading">{t('main.background.title')}</h2>
+          <p>{t('main.background.intro')}</p>
+          <dl className="experience-list">
+            <div>
+              <dt>{t('main.background.educationTitle')}</dt>
+              <dd>{t('main.background.education')}</dd>
+            </div>
+            <div>
+              <dt>{t('main.background.workTitle')}</dt>
+              <dd>{t('main.background.work')}</dd>
+            </div>
+          </dl>
+        </section>
+        <section className="content-section" aria-labelledby="skills-heading">
+          <p className="eyebrow">{t('main.skills.eyebrow')}</p>
+          <h2 id="skills-heading">{t('main.skills.title')}</h2>
+          <p>{t('main.skills.intro')}</p>
+          <ul className="skill-list">
+            {['frontend', 'backend', 'data'].map((skill) => (
+              <li key={skill}>{t(`main.skills.${skill}`)}</li>
+            ))}
+          </ul>
+          <p className="tech-caption">{t('main.skills.platformStack')}</p>
+          <ul className="tech-tags" aria-label={t('main.skills.platformStack')}>
+            {platformTechnologies.map((technology) => (
+              <li key={technology}>{technology}</li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      <section className="projects-section" id="projects" aria-labelledby="projects-heading">
+        <p className="eyebrow">{t('projects.eyebrow')}</p>
         <h2 id="projects-heading">{t('projects.title')}</h2>
+        <p className="section-intro">{t('projects.intro')}</p>
 
         {state.status === 'loading' && (
           <p className="projects-status" role="status">
@@ -162,11 +226,7 @@ export default function MainPage() {
               <p>{t(state.messageKey)}</p>
             </div>
 
-            <button
-              className="projects-retry"
-              type="button"
-              onClick={handleRetry}
-            >
+            <button className="projects-retry" type="button" onClick={handleRetry}>
               {t('projects.retry')}
             </button>
           </div>
@@ -190,9 +250,7 @@ export default function MainPage() {
                   <article className="project-card">
                     <h3>{title}</h3>
 
-                    <p className="project-card__summary">
-                      {summary}
-                    </p>
+                    <p className="project-card__summary">{summary}</p>
 
                     <p className="project-card__tech">
                       <strong>{t('projects.techStack')}: </strong>
@@ -216,6 +274,37 @@ export default function MainPage() {
             })}
           </ul>
         )}
+      </section>
+
+      <section className="platform-section" aria-labelledby="platform-heading">
+        <div>
+          <p className="eyebrow">{t('main.platform.eyebrow')}</p>
+          <h2 id="platform-heading">{t('main.platform.title')}</h2>
+        </div>
+        <div>
+          <p>{t('main.platform.description')}</p>
+          <p className="platform-section__next">{t('main.platform.next')}</p>
+        </div>
+      </section>
+
+      <section className="contact-section" id="contact" aria-labelledby="contact-heading">
+        <p className="eyebrow">{t('main.contact.eyebrow')}</p>
+        <h2 id="contact-heading">{t('main.contact.title')}</h2>
+        <p>{t('main.contact.description')}</p>
+        <div className="contact-links">
+          {profile.githubUrl && (
+            <a href={profile.githubUrl} target="_blank" rel="noopener noreferrer">
+              {t('main.contact.github')}
+            </a>
+          )}
+          {profile.linkedinUrl && (
+            <a href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer">
+              {t('main.contact.linkedin')}
+            </a>
+          )}
+          {profile.email && <a href={`mailto:${profile.email}`}>{t('main.contact.email')}</a>}
+        </div>
+        <p className="demo-note">{t('main.contact.demoNote')}</p>
       </section>
     </div>
   )

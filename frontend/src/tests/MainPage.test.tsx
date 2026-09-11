@@ -25,7 +25,9 @@ describe('MainPage', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading projects…')
     expect(screen.queryByText('No projects to display yet.')).not.toBeInTheDocument()
-    expect(screen.queryByRole('list')).not.toBeInTheDocument()
+    expect(
+      within(screen.getByRole('region', { name: 'Projects' })).queryByRole('list'),
+    ).not.toBeInTheDocument()
 
     await act(async () => pending.resolve([project]))
     expect(screen.getByRole('heading', { name: project.titleEn, level: 3 })).toBeInTheDocument()
@@ -40,7 +42,9 @@ describe('MainPage', () => {
     expect(await screen.findByText('No projects to display yet.')).toBeInTheDocument()
     expect(screen.queryByText('Loading projects…')).not.toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
-    expect(screen.queryByRole('list')).not.toBeInTheDocument()
+    expect(
+      within(screen.getByRole('region', { name: 'Projects' })).queryByRole('list'),
+    ).not.toBeInTheDocument()
   })
 
   it('displays projects in the order supplied by the service', async () => {
@@ -50,7 +54,7 @@ describe('MainPage', () => {
     ]
     getProjectsMock.mockResolvedValue(projects)
     render(<MainPage />)
-    const list = await screen.findByRole('list')
+    const list = await within(screen.getByRole('region', { name: 'Projects' })).findByRole('list')
     expect(
       within(list)
         .getAllByRole('heading', { level: 3 })
@@ -96,7 +100,9 @@ describe('MainPage', () => {
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument()
     expect(screen.queryByText('private database detail')).not.toBeInTheDocument()
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'AlphaNGold' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'SpongeBob SquarePants', level: 1 }),
+    ).toBeInTheDocument()
   })
 
   it('transitions from Error through Loading to Success on retry', async () => {
@@ -217,7 +223,9 @@ describe('MainPage', () => {
     getProjectsMock.mockResolvedValue([project])
     render(<MainPage />)
     await screen.findByRole('heading', { name: project.titleEn })
-    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expect(
+      within(screen.getByRole('region', { name: 'Projects' })).queryByRole('link'),
+    ).not.toBeInTheDocument()
   })
 
   it.each(['https://example.com/project', 'http://example.com/project'])(
