@@ -33,7 +33,7 @@ npm run dev
 
 以终端输出的 URL 为准，通常为 `http://localhost:5173`。当前后端 CORS 允许 `http://localhost:5173` 和 `http://localhost:5174`。若 Vite 使用其他端口，需调整启动端口或后端允许的 Origin；`127.0.0.1` 与 `localhost` 也属于不同 Origin。
 
-当前页面骨架可以独立启动。后续真实数据联调的启动顺序为 PostgreSQL → Spring Boot（`local` Profile）→ React。后端默认地址为 `http://localhost:8080`，本地数据库配置由后端独立管理。
+前端可以独立启动；显示数据库项目内容时，启动顺序为 PostgreSQL → Spring Boot（`local` Profile）→ React。后端默认地址为 `http://localhost:8080`，配置和启动命令见 [后端说明](../java-backend/README.md)。
 
 ## 环境变量
 
@@ -70,7 +70,7 @@ VITE_API_BASE_URL=http://localhost:8080
 
 ## API 接入约定
 
-以下接口已由 Java 后端实现，前端服务封装和页面接入属于 E5 待完成内容。
+以下接口已由 Java 后端实现，并提供前端服务封装；Main 页面使用项目接口读取数据。
 
 | 方法 | 路径               | 成功响应中的 `data`                                        |
 | ---- | ------------------ | ---------------------------------------------------------- |

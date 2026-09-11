@@ -9,9 +9,24 @@
   },
   "language": { "label": "Interface language" },
   "footer": { "description": "A little curiosity. A lot to build." },
-  "assistant": { "title": "AI Assistant — Coming in Phase 2" },
-  "dashboard": { "title": "Gold Dashboard — Coming in Phase 3" },
-  "notFound": { "title": "Page not found" },
+  "assistant": {
+    "title": "AI Assistant — Coming in Phase 2",
+    "description": "A future space for asking questions about gold and exploring research materials with an AI assistant.",
+    "notice": "This page is a preview. Chat and AI features are not available yet."
+  },
+  "common": {
+    "comingSoon": "Coming soon",
+    "backHome": "Back to home"
+  },
+  "dashboard": {
+    "title": "Gold Dashboard — Coming in Phase 3",
+    "description": "A future dashboard for exploring gold prices, market trends, and related data in one place.",
+    "notice": "This page is a preview. Charts and live market data are not available yet."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "We couldn't find this page. Check the address or return to the home page."
+  },
   "main": {
     "title": "AlphaNGold",
     "eyebrow": "A portfolio from under the sea",

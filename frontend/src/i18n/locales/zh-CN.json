@@ -9,9 +9,24 @@
   },
   "language": { "label": "界面语言" },
   "footer": { "description": "带着好奇心，把小想法慢慢做出来。" },
-  "assistant": { "title": "AI 分析助手 — 将在 Phase 2 开放" },
-  "dashboard": { "title": "黄金看板 — 将在 Phase 3 开放" },
-  "notFound": { "title": "页面未找到" },
+  "common": {
+    "comingSoon": "敬请期待",
+    "backHome": "返回主页"
+  },
+  "assistant": {
+    "title": "AI 分析助手 — 将在 Phase 2 开放",
+    "description": "这里将提供黄金研究 AI 助手，帮助你围绕黄金提出问题、查阅资料并探索相关知识。",
+    "notice": "当前页面仅作功能预告，聊天与 AI 功能尚未开放。"
+  },
+  "dashboard": {
+    "title": "黄金看板 — 将在 Phase 3 开放",
+    "description": "这里将集中展示黄金价格、市场趋势与相关数据，方便浏览和了解市场变化。",
+    "notice": "当前页面仅作功能预告，图表与实时行情尚未开放。"
+  },
+  "notFound": {
+    "title": "页面未找到",
+    "description": "没有找到这个页面。请检查地址，或返回主页继续浏览。"
+  },
   "main": {
     "title": "AlphaNGold",
     "eyebrow": "来自海底的个人作品集",
