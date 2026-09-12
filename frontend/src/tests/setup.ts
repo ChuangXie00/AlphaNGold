@@ -10,6 +10,10 @@ beforeEach(async () => {
     'fetch',
     vi.fn(() => Promise.reject(new Error('Unexpected fetch in test'))),
   )
+  // The production Axios instance uses XHR; accidental requests must stay local.
+  vi.spyOn(XMLHttpRequest.prototype, 'send').mockImplementation(() => {
+    throw new Error('Unexpected XMLHttpRequest in test')
+  })
   await i18n.changeLanguage('en')
 })
 

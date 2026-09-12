@@ -1,37 +1,76 @@
+import { AxiosError } from 'axios'
+import type { AxiosRequestConfig, CreateAxiosDefaults } from 'axios'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiClientError, apiGet } from '../services/apiClient'
-import {
-  API_BASE_URL,
-  failureEnvelope,
-  jsonResponse,
-  pendingUntilAbort,
-  successEnvelope,
-} from './helpers'
+import { API_BASE_URL } from './helpers'
 
-const fetchMock = vi.fn<typeof fetch>()
-const isString = (value: unknown): value is string => typeof value === 'string'
-const request = (options = {}) => apiGet('/api/v1/example', isString, options)
-
-beforeEach(() => {
-  vi.stubEnv('VITE_API_BASE_URL', API_BASE_URL)
-  vi.stubGlobal('fetch', fetchMock)
+const { getMock, createMock } = vi.hoisted(() => {
+  const getMock =
+    vi.fn<
+      (path: string, options: AxiosRequestConfig) => Promise<{ status: number; data: unknown }>
+    >()
+  const createMock = vi.fn<(config: CreateAxiosDefaults) => { get: typeof getMock }>()
+  return { getMock, createMock }
 })
 
-describe('apiGet', () => {
+vi.mock('axios', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('axios')>()
+  return { ...actual, default: { ...actual.default, create: createMock } }
+})
+
+let get: typeof import('../api/client').get
+
+beforeEach(async () => {
+  vi.resetModules()
+  vi.stubEnv('VITE_API_BASE_URL', API_BASE_URL)
+  createMock.mockReturnValue({ get: getMock })
+  getMock.mockRejectedValue(new Error('Unexpected Axios GET in test'))
+  get = (await import('../api/client')).get
+})
+
+describe('HTTP transport', () => {
+  it('does not initialize Axios when importing the module', () => {
+    expect(createMock).not.toHaveBeenCalled()
+  })
+
   it.each([API_BASE_URL, `  ${API_BASE_URL}/  `])(
-    'unwraps data and builds the GET URL from %s',
+    'normalizes the origin %s and returns raw text',
     async (baseUrl) => {
       vi.stubEnv('VITE_API_BASE_URL', baseUrl)
-      fetchMock.mockResolvedValue(jsonResponse(successEnvelope('ready')))
-
-      await expect(request()).resolves.toBe('ready')
-      expect(fetchMock).toHaveBeenCalledExactlyOnceWith(`${API_BASE_URL}/api/v1/example`, {
-        method: 'GET',
-        headers: { Accept: 'application/json' },
-        signal: expect.any(AbortSignal),
+      getMock.mockResolvedValue({ status: 200, data: '{"ready":true}' })
+      await expect(get('/api/v1/example')).resolves.toEqual({
+        status: 200,
+        ok: true,
+        body: '{"ready":true}',
+      })
+      expect(createMock).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({
+          baseURL: API_BASE_URL,
+          adapter: 'xhr',
+          timeout: 10_000,
+          headers: { Accept: 'application/json' },
+          responseType: 'text',
+          transformResponse: [expect.any(Function)],
+          validateStatus: expect.any(Function),
+          transitional: { clarifyTimeoutError: true },
+        }),
+      )
+      const config = createMock.mock.calls[0]?.[0]
+      expect(config?.validateStatus?.(500)).toBe(true)
+      expect(getMock).toHaveBeenCalledExactlyOnceWith('/api/v1/example', {
+        timeout: 10_000,
+        signal: undefined,
       })
     },
   )
+
+  it('reuses the initialized instance and configuration', async () => {
+    getMock.mockResolvedValue({ status: 200, data: '{}' })
+    await get('/api/v1/first')
+    vi.stubEnv('VITE_API_BASE_URL', '')
+    await get('/api/v1/second')
+    expect(createMock).toHaveBeenCalledOnce()
+    expect(getMock).toHaveBeenCalledTimes(2)
+  })
 
   it.each([
     undefined,
@@ -43,164 +82,101 @@ describe('apiGet', () => {
     `${API_BASE_URL}?key=value`,
     `${API_BASE_URL}#fragment`,
     'http://user:password@api.test',
-  ])('rejects invalid configuration %s before fetching', async (baseUrl) => {
+  ])('rejects invalid configuration %s', async (baseUrl) => {
     vi.stubEnv('VITE_API_BASE_URL', baseUrl)
-    await expect(request()).rejects.toMatchObject({ kind: 'CONFIG' })
-    expect(fetchMock).not.toHaveBeenCalled()
+    await expect(get('/api/v1/example')).rejects.toMatchObject({ kind: 'CONFIG' })
+    expect(createMock).not.toHaveBeenCalled()
+    expect(getMock).not.toHaveBeenCalled()
   })
 
-  it.each(['api/v1/example', '//other.test/example'])(
-    'rejects invalid path %s before fetching',
-    async (path) => {
-      await expect(apiGet(path, isString)).rejects.toMatchObject({ kind: 'CONFIG' })
-      expect(fetchMock).not.toHaveBeenCalled()
-    },
-  )
+  it.each(['api/v1/example', '//other.test/example'])('rejects invalid path %s', async (path) => {
+    await expect(get(path)).rejects.toMatchObject({ kind: 'CONFIG' })
+    expect(getMock).not.toHaveBeenCalled()
+  })
 
   it.each([0, -1, NaN, Infinity])('rejects invalid timeout %s', async (timeoutMs) => {
-    await expect(request({ timeoutMs })).rejects.toMatchObject({ kind: 'CONFIG' })
-    expect(fetchMock).not.toHaveBeenCalled()
-  })
-
-  it.each([400, 404, 500])('preserves HTTP %s and backend error details', async (status) => {
-    const payload = failureEnvelope()
-    fetchMock.mockResolvedValue(jsonResponse(payload, status))
-    await expect(request()).rejects.toMatchObject({
-      name: 'ApiClientError',
-      kind: 'HTTP',
-      status,
-      code: payload.error.code,
-      message: payload.error.message,
-      details: payload.error.details,
+    await expect(get('/api/v1/example', { timeoutMs })).rejects.toMatchObject({
+      kind: 'CONFIG',
     })
+    expect(getMock).not.toHaveBeenCalled()
   })
 
-  it('rejects a business failure even when HTTP is 200', async () => {
-    const payload = failureEnvelope()
-    fetchMock.mockResolvedValue(jsonResponse(payload))
-    await expect(request()).rejects.toMatchObject({
-      kind: 'BUSINESS',
-      status: 200,
-      code: payload.error.code,
-      details: payload.error.details,
-    })
-  })
-
-  it('normalizes a connection failure as NETWORK', async () => {
-    fetchMock.mockRejectedValue(new TypeError('Failed to fetch'))
-    await expect(request()).rejects.toMatchObject({ kind: 'NETWORK', status: null })
-  })
-
-  it.each([
-    { status: 200, kind: 'INVALID_RESPONSE' },
-    { status: 502, kind: 'HTTP' },
-  ])('handles a non-JSON HTTP $status response', async ({ status, kind }) => {
-    fetchMock.mockResolvedValue(new Response('<html>Unavailable</html>', { status }))
-    await expect(request()).rejects.toMatchObject({ kind, status })
-  })
-
-  it.each([
-    null,
-    [],
-    'ready',
-    {},
-    { ...successEnvelope('ready'), success: 'true' },
-    { success: true, data: 'ready', error: null },
-    { success: true, error: null, timestamp: '2026-09-10T08:00:00Z' },
-    { ...successEnvelope('ready'), error: {} },
-    { ...failureEnvelope(), data: 'unexpected' },
-    { ...failureEnvelope(), error: { code: 'ERROR', message: 'Bad', details: { field: 123 } } },
-  ])('rejects malformed envelopes: %j', async (payload) => {
-    fetchMock.mockResolvedValue(jsonResponse(payload))
-    await expect(request()).rejects.toMatchObject({ kind: 'INVALID_RESPONSE' })
-  })
-
-  it('checks the actual data rather than trusting the generic type', async () => {
-    fetchMock.mockResolvedValue(jsonResponse(successEnvelope(123)))
-    await expect(request()).rejects.toMatchObject({ kind: 'INVALID_RESPONSE' })
-  })
-
-  it('preserves HTTP status even if the error envelope is malformed', async () => {
-    fetchMock.mockResolvedValue(jsonResponse({ unexpected: true }, 503))
-    await expect(request()).rejects.toMatchObject({ kind: 'HTTP', status: 503 })
-  })
-
-  it.each([undefined, 50])('cancels a stalled request at timeout %s', async (timeoutMs) => {
-    vi.useFakeTimers()
-    fetchMock.mockImplementation((_input, init) => pendingUntilAbort(init?.signal))
-    const result = request({ timeoutMs })
-    // Attach the rejection assertion before advancing time.
-    const assertion = expect(result).rejects.toMatchObject({ kind: 'TIMEOUT' })
-    const signal = fetchMock.mock.calls[0][1]?.signal
-    const duration = timeoutMs ?? 10_000
-
-    await vi.advanceTimersByTimeAsync(duration - 1)
-    expect(signal?.aborted).toBe(false)
-    await vi.advanceTimersByTimeAsync(1)
-    await assertion
-    expect(signal?.aborted).toBe(true)
-    expect(vi.getTimerCount()).toBe(0)
-  })
-
-  it('cancels an in-flight request when the caller aborts', async () => {
-    vi.useFakeTimers()
+  it('forwards timeout and the original signal', async () => {
     const caller = new AbortController()
-    fetchMock.mockImplementation((_input, init) => pendingUntilAbort(init?.signal))
-    const assertion = expect(request({ signal: caller.signal })).rejects.toMatchObject({
+    getMock.mockResolvedValue({ status: 200, data: '{}' })
+    await get('/api/v1/example', { timeoutMs: 25, signal: caller.signal })
+    expect(getMock).toHaveBeenCalledExactlyOnceWith('/api/v1/example', {
+      timeout: 25,
+      signal: caller.signal,
+    })
+  })
+
+  it('does not send an already cancelled request', async () => {
+    const caller = new AbortController()
+    caller.abort()
+    await expect(get('/api/v1/example', { signal: caller.signal })).rejects.toMatchObject({
       kind: 'ABORTED',
     })
-    caller.abort()
-    await assertion
-    expect(fetchMock.mock.calls[0][1]?.signal?.aborted).toBe(true)
-    expect(vi.getTimerCount()).toBe(0)
+    expect(createMock).not.toHaveBeenCalled()
+    expect(getMock).not.toHaveBeenCalled()
   })
 
-  it('does not send a request for an already aborted signal', async () => {
-    const caller = new AbortController()
-    caller.abort()
-    await expect(request({ signal: caller.signal })).rejects.toMatchObject({ kind: 'ABORTED' })
-    expect(fetchMock).not.toHaveBeenCalled()
-  })
-
-  it.each(['caller', 'timeout'])(
-    'handles %s cancellation while reading the response body',
-    async (cause) => {
-      vi.useFakeTimers()
-      const caller = new AbortController()
-      const response = jsonResponse(successEnvelope('ready'))
-      const readBody = vi.spyOn(response, 'json')
-      fetchMock.mockImplementation((_input, init) => {
-        readBody.mockImplementation(() => pendingUntilAbort(init?.signal))
-        return Promise.resolve(response)
+  it.each([200, 201, 204, 400, 404, 409, 500, 502])(
+    'returns HTTP %s for contract processing',
+    async (status) => {
+      getMock.mockResolvedValue({ status, data: '<body>raw text</body>' })
+      await expect(get('/api/v1/example')).resolves.toEqual({
+        status,
+        ok: status >= 200 && status < 300,
+        body: '<body>raw text</body>',
       })
-      const assertion = expect(
-        request({ signal: caller.signal, timeoutMs: 50 }),
-      ).rejects.toMatchObject({
-        kind: cause === 'caller' ? 'ABORTED' : 'TIMEOUT',
-      })
-      await vi.advanceTimersByTimeAsync(0)
-      expect(readBody).toHaveBeenCalledOnce()
-      if (cause === 'caller') caller.abort()
-      else await vi.advanceTimersByTimeAsync(50)
-      await assertion
-      expect(vi.getTimerCount()).toBe(0)
     },
   )
 
-  it.each([200, 500])('cleans timers and caller listeners after HTTP %s', async (status) => {
-    vi.useFakeTimers()
-    const caller = new AbortController()
-    const addListener = vi.spyOn(caller.signal, 'addEventListener')
-    const removeListener = vi.spyOn(caller.signal, 'removeEventListener')
-    fetchMock.mockResolvedValue(
-      jsonResponse(status === 200 ? successEnvelope('ready') : failureEnvelope(), status),
-    )
-    if (status === 200) await expect(request({ signal: caller.signal })).resolves.toBe('ready')
-    else await expect(request({ signal: caller.signal })).rejects.toBeInstanceOf(ApiClientError)
+  it.each([
+    { code: 'ERR_CANCELED', kind: 'ABORTED' },
+    { code: 'ETIMEDOUT', kind: 'TIMEOUT' },
+    { code: 'ERR_NETWORK', kind: 'NETWORK' },
+    { code: 'ECONNABORTED', kind: 'NETWORK' },
+  ])('maps $code to $kind and preserves the cause', async ({ code, kind }) => {
+    const cause = new AxiosError('Transport failure', code)
+    getMock.mockRejectedValue(cause)
+    await expect(get('/api/v1/example')).rejects.toMatchObject({
+      name: 'ApiClientError',
+      kind,
+      code: kind,
+      status: null,
+      cause,
+    })
+  })
 
-    expect(vi.getTimerCount()).toBe(0)
-    expect(removeListener).toHaveBeenCalledWith('abort', addListener.mock.calls[0][1])
-    caller.abort()
-    expect(fetchMock.mock.calls[0][1]?.signal?.aborted).toBe(false)
+  it('uses the rejection cause rather than a later signal state', async () => {
+    const caller = new AbortController()
+    const cause = new AxiosError('Network failure', 'ERR_NETWORK')
+    getMock.mockImplementation(async () => {
+      caller.abort()
+      throw cause
+    })
+    await expect(get('/api/v1/example', { signal: caller.signal })).rejects.toMatchObject({
+      kind: 'NETWORK',
+      cause,
+    })
+  })
+
+  it('preserves an unexpected programming error', async () => {
+    const bug = new TypeError('Unexpected implementation failure')
+    getMock.mockRejectedValue(bug)
+    await expect(get('/api/v1/example')).rejects.toBe(bug)
+  })
+
+  it('preserves an unrecognized Axios error', async () => {
+    const bug = new AxiosError('Unexpected option', 'ERR_BAD_OPTION_VALUE')
+    getMock.mockRejectedValue(bug)
+    await expect(get('/api/v1/example')).rejects.toBe(bug)
+  })
+
+  it('does not label a broken text boundary as NETWORK', async () => {
+    getMock.mockResolvedValue({ status: 200, data: { unexpectedlyParsed: true } })
+    await expect(get('/api/v1/example')).rejects.toBeInstanceOf(TypeError)
   })
 })

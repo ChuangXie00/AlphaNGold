@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { platformTechnologies, profile } from '../config/profile'
-import { ApiClientError } from '../services/apiClient'
-import { getMyProjExpList } from '../services/myProjExpService'
-import type { MyProjExp } from '../services/types'
+import { ApiClientError } from '../api/errors'
+import { getMyProjExpList } from '../services/myProjExp/myProjExpService'
+import type { MyProjExp } from '../services/myProjExp/types'
 import '../styles/main-page.css'
 
 type ErrorMessageKey =

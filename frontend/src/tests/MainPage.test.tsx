@@ -4,12 +4,12 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import MainPage from '../pages/MainPage'
 import i18n from '../i18n'
-import { ApiClientError } from '../services/apiClient'
-import { getMyProjExpList } from '../services/myProjExpService'
-import type { MyProjExp } from '../services/types'
+import { ApiClientError } from '../api/errors'
+import { getMyProjExpList } from '../services/myProjExp/myProjExpService'
+import type { MyProjExp } from '../services/myProjExp/types'
 import { deferred, makeProject, pendingUntilAbort } from './helpers'
 
-vi.mock('../services/myProjExpService', () => ({ getMyProjExpList: vi.fn() }))
+vi.mock('../services/myProjExp/myProjExpService', () => ({ getMyProjExpList: vi.fn() }))
 const getProjectsMock = vi.mocked(getMyProjExpList)
 
 beforeEach(() => {

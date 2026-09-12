@@ -1,31 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getHealth } from '../services/healthService'
-import { getMyProjExpList } from '../services/myProjExpService'
-import {
-  API_BASE_URL,
-  failureEnvelope,
-  jsonResponse,
-  makeProject,
-  pendingUntilAbort,
-  successEnvelope,
-} from './helpers'
+import { get } from '../api/client'
+import * as contract from '../api/contract'
+import { getHealth } from '../services/health/healthService'
+import { getMyProjExpList } from '../services/myProjExp/myProjExpService'
+import { failureEnvelope, httpResult, makeProject, successEnvelope } from './helpers'
 
-const fetchMock = vi.fn<typeof fetch>()
+vi.mock('../api/client', () => ({ get: vi.fn() }))
+const getMock = vi.mocked(get)
 
 beforeEach(() => {
-  vi.stubEnv('VITE_API_BASE_URL', API_BASE_URL)
-  vi.stubGlobal('fetch', fetchMock)
+  getMock.mockRejectedValue(new Error('Unexpected transport call in service test'))
 })
 
 describe('healthService', () => {
-  it('calls the real client with the Health path and unwraps the response', async () => {
+  it('uses the Health endpoint and unwraps real contract data', async () => {
     const health = { status: 'up', service: 'alphangold-java-backend' }
-    fetchMock.mockResolvedValue(jsonResponse(successEnvelope(health)))
+    getMock.mockResolvedValue(httpResult(successEnvelope(health)))
     await expect(getHealth()).resolves.toEqual(health)
-    expect(fetchMock).toHaveBeenCalledWith(
-      `${API_BASE_URL}/api/v1/health`,
-      expect.objectContaining({ method: 'GET' }),
-    )
+    expect(getMock).toHaveBeenCalledExactlyOnceWith('/api/v1/health', {})
   })
 
   it.each([
@@ -36,39 +28,47 @@ describe('healthService', () => {
     { status: 1, service: 'backend' },
     { status: 'up', service: null },
   ])('rejects invalid Health data %j', async (data) => {
-    fetchMock.mockResolvedValue(jsonResponse(successEnvelope(data)))
-    await expect(getHealth()).rejects.toMatchObject({ kind: 'INVALID_RESPONSE' })
+    getMock.mockResolvedValue(httpResult(successEnvelope(data)))
+    await expect(getHealth()).rejects.toMatchObject({ kind: 'INVALID_RESPONSE', status: 200 })
   })
 
-  it('forwards the timeout option to the client', async () => {
-    vi.useFakeTimers()
-    fetchMock.mockImplementation((_input, init) => pendingUntilAbort(init?.signal))
-    const assertion = expect(getHealth({ timeoutMs: 25 })).rejects.toMatchObject({
-      kind: 'TIMEOUT',
-    })
-    await vi.advanceTimersByTimeAsync(25)
-    await assertion
+  it('allows additional Health fields', async () => {
+    const health = { status: 'up', service: 'alphangold-java-backend', version: 'optional' }
+    getMock.mockResolvedValue(httpResult(successEnvelope(health)))
+    await expect(getHealth()).resolves.toEqual(health)
+  })
+
+  it('forwards request options', async () => {
+    const caller = new AbortController()
+    const options = { timeoutMs: 25, signal: caller.signal }
+    getMock.mockResolvedValue(
+      httpResult(
+        successEnvelope({
+          status: 'up',
+          service: 'alphangold-java-backend',
+        }),
+      ),
+    )
+    await getHealth(options)
+    expect(getMock).toHaveBeenCalledExactlyOnceWith('/api/v1/health', options)
   })
 })
 
 describe('myProjExpService', () => {
-  it('calls Projects, preserving all fields, null links and server order', async () => {
+  it('preserves fields, null links and server order', async () => {
     const projects = [makeProject({ id: 10, displayOrder: 20, projectUrl: null }), makeProject()]
-    fetchMock.mockResolvedValue(jsonResponse(successEnvelope(projects)))
+    getMock.mockResolvedValue(httpResult(successEnvelope(projects)))
     await expect(getMyProjExpList()).resolves.toEqual(projects)
-    expect(fetchMock).toHaveBeenCalledWith(
-      `${API_BASE_URL}/api/v1/projects`,
-      expect.objectContaining({ method: 'GET' }),
-    )
+    expect(getMock).toHaveBeenCalledExactlyOnceWith('/api/v1/projects', {})
   })
 
   it('accepts an empty project list', async () => {
-    fetchMock.mockResolvedValue(jsonResponse(successEnvelope([])))
+    getMock.mockResolvedValue(httpResult(successEnvelope([])))
     await expect(getMyProjExpList()).resolves.toEqual([])
   })
 
   it.each([null, {}, { projects: [] }])('rejects a non-array list %j', async (data) => {
-    fetchMock.mockResolvedValue(jsonResponse(successEnvelope(data)))
+    getMock.mockResolvedValue(httpResult(successEnvelope(data)))
     await expect(getMyProjExpList()).rejects.toMatchObject({ kind: 'INVALID_RESPONSE' })
   })
 
@@ -84,30 +84,75 @@ describe('myProjExpService', () => {
     { displayOrder: 1.5 },
     { createdAt: null },
     { updatedAt: 123 },
-  ])('rejects a list containing invalid project fields %j', async (invalidFields) => {
-    fetchMock.mockResolvedValue(
-      jsonResponse(successEnvelope([makeProject(), { ...makeProject(), ...invalidFields }])),
+  ])('rejects invalid project fields %j', async (invalidFields) => {
+    getMock.mockResolvedValue(
+      httpResult(successEnvelope([makeProject(), { ...makeProject(), ...invalidFields }])),
     )
+    await expect(getMyProjExpList()).rejects.toMatchObject({
+      kind: 'INVALID_RESPONSE',
+      status: 200,
+    })
+  })
+
+  it.each([
+    'id',
+    'titleZh',
+    'titleEn',
+    'summaryZh',
+    'summaryEn',
+    'techStack',
+    'projectUrl',
+    'displayOrder',
+    'createdAt',
+    'updatedAt',
+  ])('rejects a missing required field %s', async (field) => {
+    const incompleteProject = Object.fromEntries(
+      Object.entries(makeProject()).filter(([key]) => key !== field),
+    )
+    getMock.mockResolvedValue(httpResult(successEnvelope([incompleteProject])))
     await expect(getMyProjExpList()).rejects.toMatchObject({ kind: 'INVALID_RESPONSE' })
   })
 
-  it('propagates a backend error from the real client', async () => {
-    fetchMock.mockResolvedValue(jsonResponse(failureEnvelope(), 500))
+  it('allows additional project fields', async () => {
+    const project = { ...makeProject(), category: 'optional' }
+    getMock.mockResolvedValue(httpResult(successEnvelope([project])))
+    await expect(getMyProjExpList()).resolves.toEqual([project])
+  })
+
+  it.each([
+    { status: 500, kind: 'HTTP' },
+    { status: 200, kind: 'BUSINESS' },
+  ])('propagates $kind through the real contract', async ({ status, kind }) => {
+    const payload = failureEnvelope()
+    getMock.mockResolvedValue(httpResult(payload, status))
     await expect(getMyProjExpList()).rejects.toMatchObject({
-      kind: 'HTTP',
-      status: 500,
-      code: 'INTERNAL_SERVER_ERROR',
+      kind,
+      status,
+      code: payload.error.code,
+      details: payload.error.details,
     })
   })
 
-  it('forwards caller cancellation to the client', async () => {
+  it('forwards request options', async () => {
     const caller = new AbortController()
-    fetchMock.mockImplementation((_input, init) => pendingUntilAbort(init?.signal))
-    const assertion = expect(getMyProjExpList({ signal: caller.signal })).rejects.toMatchObject({
-      kind: 'ABORTED',
+    const options = { signal: caller.signal, timeoutMs: 50 }
+    getMock.mockResolvedValue(httpResult(successEnvelope([])))
+    await getMyProjExpList(options)
+    expect(getMock).toHaveBeenCalledExactlyOnceWith('/api/v1/projects', options)
+  })
+
+  it('preserves an exception from domain validation', async () => {
+    const bug = new Error('Unexpected domain guard failure')
+    getMock.mockResolvedValue(httpResult(successEnvelope([makeProject()])))
+    vi.spyOn(contract, 'isRecord').mockImplementation(() => {
+      throw bug
     })
-    caller.abort()
-    await assertion
-    expect(fetchMock.mock.calls[0][1]?.signal?.aborted).toBe(true)
+    await expect(getMyProjExpList()).rejects.toBe(bug)
+  })
+
+  it('preserves an unexpected transport exception', async () => {
+    const bug = new Error('Unexpected transport implementation failure')
+    getMock.mockRejectedValue(bug)
+    await expect(getMyProjExpList()).rejects.toBe(bug)
   })
 })

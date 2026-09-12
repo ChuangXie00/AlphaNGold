@@ -70,6 +70,8 @@ Gold price visualization, market indicators, historical analysis, and generated 
 
 ## Local Environment
 
+For runnable setup, test and startup commands, see the [frontend guide](frontend/README.md) and [Java backend guide](java-backend/README.md). Start PostgreSQL, then the Java backend, then the frontend.
+
 Copy the environment variable template when local environment files are needed:
 
 ```

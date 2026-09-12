@@ -3,12 +3,12 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../App'
-import { ApiClientError } from '../services/apiClient'
-import { getMyProjExpList } from '../services/myProjExpService'
-import type { MyProjExp } from '../services/types'
+import { ApiClientError } from '../api/errors'
+import { getMyProjExpList } from '../services/myProjExp/myProjExpService'
+import type { MyProjExp } from '../services/myProjExp/types'
 import { deferred, makeProject } from './helpers'
 
-vi.mock('../services/myProjExpService', () => ({
+vi.mock('../services/myProjExp/myProjExpService', () => ({
   getMyProjExpList: vi.fn(),
 }))
 

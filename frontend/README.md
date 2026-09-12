@@ -10,6 +10,7 @@ AlphaNGold 的 React 前端，负责个人主页、AI Assistant 入口和 Gold D
 | 开发服务器与构建 | Vite                                 |
 | 路由             | React Router                         |
 | 国际化           | i18next、react-i18next               |
+| HTTP 请求        | Axios（浏览器 XHR adapter）          |
 | 测试             | Vitest、React Testing Library、jsdom |
 | 代码检查与格式化 | ESLint、Prettier                     |
 
@@ -59,12 +60,12 @@ VITE_API_BASE_URL=http://localhost:8080
 
 ## 页面路由
 
-| 路径         | 页面           | 当前状态                                       |
-| ------------ | -------------- | ---------------------------------------------- |
-| `/`          | Main           | 个人内容主页                                   |
-| `/assistant` | AI Assistant   | AI Assistant 占位页                            |
-| `/dashboard` | Gold Dashboard | Gold Dashboard 占位页                          |
-| 其他路径     | 404            | 基础提示页                                     |
+| 路径         | 页面           | 当前状态              |
+| ------------ | -------------- | --------------------- |
+| `/`          | Main           | 个人内容主页          |
+| `/assistant` | AI Assistant   | AI Assistant 占位页   |
+| `/dashboard` | Gold Dashboard | Gold Dashboard 占位页 |
+| 其他路径     | 404            | 基础提示页            |
 
 路由定义位于 `src/App.tsx`，导航位于 `src/components/AppNav.tsx`。
 
@@ -88,20 +89,28 @@ VITE_API_BASE_URL=http://localhost:8080
 | `error`     | 成功时为 `null`；失败时包含 `code`、`message`、`details` |
 | `timestamp` | 带时区的时间字符串                                       |
 
-`error.details` 为字段名到错误说明的映射，无额外详情时为 `{}`。前端 Client 将同时检查 HTTP 状态和统一响应，处理网络失败、超时及无效响应。
+`error.details` 为字段名到错误说明的映射，无额外详情时为 `{}`。
+
+请求链路为页面 → 业务服务 → HTTP Client。`src/api/client.ts` 使用一个延迟初始化的 Axios instance，首次请求时检查 API origin，默认超时为 10 秒，支持调用方通过 `AbortSignal` 取消。HTTP 响应保持为文本，由 `src/api/contract.ts` 解析 JSON、检查统一响应并处理 HTTP 或业务错误，再由业务服务校验 Health 或项目字段。
+
+非 2xx 响应始终作为 HTTP 错误处理，包括 HTML 错误页；合法失败响应中的后端错误码和字段详情会保留。页面使用固定的双语提示，不直接展示内部错误消息。Main 页面保留手动重试、卸载取消和旧结果隔离；项目列表保留后端顺序，切换语言不会重新请求。
+
+`getHealth()` 仅表示 Java 可以响应，不保证数据库可用，也不是项目请求的前置检查。
 
 ## 目录说明
 
-| 路径                      | 用途                                 |
-| ------------------------- | ------------------------------------ |
-| `src/pages/`              | Main、占位页与 404                   |
-| `src/components/`         | 导航等共享组件                       |
-| `src/i18n/`               | i18n 初始化与 `en`、`zh-CN` 翻译资源 |
-| `src/styles/`             | 当前使用的全局样式                   |
-| `src/assets/`             | 图片等静态资源                       |
-| `src/tests/`              | 测试初始化与现有应用冒烟测试         |
-| `src/vite-env.d.ts`       | 前端环境变量类型声明                 |
-| `src/services/`           | API Client、响应类型与接口服务       |
+| 路径                     | 用途                                          |
+| ------------------------ | --------------------------------------------- |
+| `src/pages/`             | Main、占位页与 404                            |
+| `src/components/`        | 导航等共享组件                                |
+| `src/i18n/`              | i18n 初始化与 `en`、`zh-CN` 翻译资源          |
+| `src/styles/`            | 当前使用的全局样式                            |
+| `src/assets/`            | 图片等静态资源                                |
+| `src/tests/`             | Client、契约、服务、页面与语言测试            |
+| `src/vite-env.d.ts`      | 前端环境变量类型声明                          |
+| `src/api/`               | HTTP Client、公共错误、统一响应类型与契约检查 |
+| `src/services/health/`   | Health 服务及业务类型                         |
+| `src/services/myProjExp/` | MyProjExp 服务及业务类型                      |
 
 ## 开发检查
 
@@ -113,7 +122,9 @@ npm run lint
 npm run build
 ```
 
-`test` 执行一次测试，`build` 执行 TypeScript 检查并生成 `dist/`。当前测试只覆盖首页标题，API 与页面状态测试待 E5 补充。
+`test` 执行一次测试，`build` 在 TypeScript 严格检查通过后生成 `dist/`。应用和 Vite 配置均启用 `strict`。测试覆盖请求配置与错误适配、JSON 和统一响应、业务字段校验，以及页面加载／成功／空态／错误、手动重试、取消、旧结果隔离、路由和语言偏好。单元测试默认阻止未模拟的 fetch 和 XHR 请求；真实浏览器的超时、慢响应体及后端联调单独验收。
+
+Windows PowerShell 如果拦截 `npm.ps1`，可使用 `npm.cmd test`、`npm.cmd run lint` 和 `npm.cmd run build`，无需改变系统执行策略。
 
 其他可用命令：
 

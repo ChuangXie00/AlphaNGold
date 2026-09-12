@@ -1,4 +1,5 @@
-import type { MyProjExp } from '../services/types'
+import type { HttpResult } from '../api/client'
+import type { MyProjExp } from '../services/myProjExp/types'
 
 export const API_BASE_URL = 'http://api.test:8080'
 const TIMESTAMP = '2026-09-10T08:00:00Z'
@@ -36,11 +37,8 @@ export function failureEnvelope() {
   }
 }
 
-export function jsonResponse(value: unknown, status = 200): Response {
-  return new Response(JSON.stringify(value), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  })
+export function httpResult(value: unknown, status = 200): HttpResult {
+  return { status, ok: status >= 200 && status < 300, body: JSON.stringify(value) }
 }
 
 // Tests choose exactly when a request succeeds or fails, without real sleeps.
@@ -54,7 +52,7 @@ export function deferred<T>() {
   return { promise, resolve, reject }
 }
 
-// A pending fetch/body must reject on abort just as the browser does.
+// Page tests use a pending service call that rejects when its caller aborts.
 export function pendingUntilAbort(signal: AbortSignal | null | undefined): Promise<never> {
   if (!signal) throw new Error('Expected the request to include an AbortSignal')
   return new Promise((_, reject) => {
