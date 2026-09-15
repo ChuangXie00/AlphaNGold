@@ -11,6 +11,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import org.springframework.web.ErrorResponse;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -67,7 +70,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponseOutVO<Void>> handleDataIntegrity(
             DataIntegrityViolationException ex
     ) {
-        log.warn("Database constraint violation", ex);
+        log.warn("Database constraint violation; type={}",
+                ex.getClass().getSimpleName());
 
         return buildResponse(
                 HttpStatus.CONFLICT,
@@ -77,11 +81,43 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiResponseOutVO <Void>> handleResponseStatus(
+            ResponseStatusException ex
+    ) {
+        boolean forbidden = ex.getStatusCode().value() == 403;
+
+        return ResponseEntity
+                .status(ex.getStatusCode())
+                .headers(ex.getHeaders())
+                .body(ApiResponseOutVO.<Void>failure(
+                        forbidden ? "WRITE_DISABLED" : "REQUEST_REJECTED",
+                        forbidden
+                                ? "Write operations are disabled"
+                                : "The request was rejected",
+                        Map.of()
+                ));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponseOutVO<Void>> handleUnexpected(
             Exception ex
     ) {
-        log.error("Unexpected server error", ex);
+        // 保留框架产生的404、405、415。
+        if (ex instanceof ErrorResponse error
+                && error.getStatusCode().is4xxClientError()) {
+            return ResponseEntity
+                    .status(error.getStatusCode())
+                    .headers(error.getHeaders())
+                    .body(ApiResponseOutVO.<Void>failure(
+                            "REQUEST_REJECTED",
+                            "The request was rejected",
+                            Map.of()
+                    ));
+        }
+
+        log.error("Unexpected server error; type={}",
+                ex.getClass().getSimpleName());
 
         return buildResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,

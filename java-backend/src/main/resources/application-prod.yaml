@@ -1,0 +1,54 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:5}
+      minimum-idle: 0
+
+      # ms
+      connection-timeout: ${DB_POOL_CONNECTION_TIMEOUT_MS:5000}
+      validation-timeout: 1000
+
+      data-source-properties:
+        sslmode: verify-full
+        sslfactory: org.postgresql.ssl.LibPQFactory
+        sslrootcert: ${DATABASE_SSL_ROOT_CERT}
+
+        # pgJDBC: sec
+        connectTimeout: 10
+        socketTimeout: 30
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: false
+
+    properties:
+      hibernate:
+        format_sql: false
+
+  flyway:
+    enabled: false
+
+  web:
+    error:
+      include-exception: false
+      include-message: never
+      include-binding-errors: never
+      include-stacktrace: never
+
+app:
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS}
+
+logging:
+  level:
+    root: INFO
+    com.ang.backend: INFO
+    org.hibernate.SQL: OFF
+    org.hibernate.orm.jdbc.bind: OFF
+    org.hibernate.orm.jdbc.extract: OFF

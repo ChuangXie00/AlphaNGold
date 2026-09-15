@@ -1,3 +1,8 @@
 spring:
   application:
     name: alphangold-java-backend
+
+app:
+  write-enabled: ${WRITE_ENABLED:false}
+  cors:
+    allowed-origins: ""

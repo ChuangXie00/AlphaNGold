@@ -13,6 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.List;
 
 @RestController
@@ -20,6 +23,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MyProjExpController {
     private final MyProjExpService myProjExpService;
+
+    @Value("${app.write-enabled:false}")
+    private boolean writeEnabled;
 
     @GetMapping
     public ApiResponseOutVO< List<MyProjExpOutVO>> findAll() {
@@ -44,6 +50,9 @@ public class MyProjExpController {
     public ResponseEntity<ApiResponseOutVO<MyProjExpOutVO>> create(
             @Valid @RequestBody MyProjExpInVO in
             ) {
+
+        checkWriteEnabled();
+
         MyProjExpOutVO created = toOutVO(
                 myProjExpService.create(toInDTO(in))
         );
@@ -59,6 +68,8 @@ public class MyProjExpController {
             @PathVariable Long id,
             @Valid @RequestBody MyProjExpInVO in
     ) {
+        checkWriteEnabled();
+
         // TODO     should consider about update failed
         return ApiResponseOutVO.success(
                 toOutVO(myProjExpService.update(id, toInDTO(in)))
@@ -69,9 +80,20 @@ public class MyProjExpController {
     public ApiResponseOutVO<Void> delete(
           @PathVariable Long id
     ) {
+        checkWriteEnabled();
+
         myProjExpService.delete(id);
         // TODO     should consider about delete failed
         return ApiResponseOutVO.emptySuccess();
+    }
+
+    private void checkWriteEnabled() {
+        if (!writeEnabled) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Write operations are disabled."
+            );
+        }
     }
 
     private MyProjExpInDTO toInDTO(MyProjExpInVO inVO) {
