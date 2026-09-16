@@ -81,20 +81,35 @@ public class GlobalExceptionHandler {
         );
     }
 
+    // TODO: 引入auth或更多业务错误后，按具体异常或业务错误码区分原因，不再仅凭 HTTP 状态码分类，尤其不能把所有 403 都映射为 WRITE_DISABLED。调整时同步更新前端错误提示及测试，保留统一响应结构。
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ApiResponseOutVO <Void>> handleResponseStatus(
             ResponseStatusException ex
     ) {
-        boolean forbidden = ex.getStatusCode().value() == 403;
+        int status = ex.getStatusCode().value();
+
+        String code = switch (status) {
+            case 403 -> "WRITE_DISABLED";
+            case 413 -> "PAYLOAD_TOO_LARGE";
+            case 429 -> "RATE_LIMITED";
+            case 503 -> "SERVICE_UNAVAILABLE";
+            default -> "REQUEST_REJECTED";
+        };
+
+        String message = switch (status) {
+            case 403 -> "Write operations are disabled";
+            case 413 -> "Request body is too large";
+            case 429 -> "Too many requests. Please try again later";
+            case 503 -> "The service is temporarily unavailable";
+            default -> "The request was rejected";
+        };
 
         return ResponseEntity
                 .status(ex.getStatusCode())
                 .headers(ex.getHeaders())
                 .body(ApiResponseOutVO.<Void>failure(
-                        forbidden ? "WRITE_DISABLED" : "REQUEST_REJECTED",
-                        forbidden
-                                ? "Write operations are disabled"
-                                : "The request was rejected",
+                        code,
+                        message,
                         Map.of()
                 ));
     }

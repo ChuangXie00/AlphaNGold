@@ -11,6 +11,7 @@ spring:
       # ms
       connection-timeout: ${DB_POOL_CONNECTION_TIMEOUT_MS:5000}
       validation-timeout: 1000
+      connection-init-sql: "SET statement_timeout = '3s'"
 
       data-source-properties:
         sslmode: verify-full
@@ -45,6 +46,9 @@ app:
   cors:
     allowed-origins: ${ALLOWED_ORIGINS}
 
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+
 logging:
   level:
     root: INFO
@@ -52,3 +56,4 @@ logging:
     org.hibernate.SQL: OFF
     org.hibernate.orm.jdbc.bind: OFF
     org.hibernate.orm.jdbc.extract: OFF
+    org.springframework.web: WARN

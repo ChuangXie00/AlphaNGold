@@ -9,6 +9,7 @@ import '../styles/main-page.css'
 type ErrorMessageKey =
   | 'projects.errors.network'
   | 'projects.errors.timeout'
+  | 'projects.errors.rateLimited'
   | 'projects.errors.unavailable'
   | 'projects.errors.invalidResponse'
   | 'projects.errors.unknown'
@@ -24,6 +25,11 @@ function getErrorMessageKey(error: unknown): ErrorMessageKey {
   if (!(error instanceof ApiClientError)) {
     return 'projects.errors.unknown'
   }
+
+  if (error.status === 429) {
+    return 'projects.errors.rateLimited'
+  }
+
   switch (error.kind) {
     case 'NETWORK':
       return 'projects.errors.network'

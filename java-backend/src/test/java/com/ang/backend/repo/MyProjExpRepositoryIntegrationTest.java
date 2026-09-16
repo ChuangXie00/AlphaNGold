@@ -2,8 +2,12 @@ package com.ang.backend.repo;
 
 import com.ang.backend.repo.model.MyProjExp;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Limit;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +16,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @ActiveProfiles("local")
@@ -61,16 +66,36 @@ class MyProjExpRepositoryIntegrationTest {
     }
 
     @Test
-    void customQueryOrdersByDisplayOrderThenId() {
+    void customQueryLimitsResultsAndOrdersByDisplayOrderThenId() {
         repository.saveAndFlush(newEntity("排序测试一", "Ordering Test One", 7003));
         repository.saveAndFlush(newEntity("排序测试二", "Ordering Test Two", 7002));
+        repository.saveAndFlush(newEntity("排序测试三", "Ordering Test Three", 7002));
 
-        List<MyProjExp> result = repository.findAllByOrderByDisplayOrderAscIdAsc();
+        List<MyProjExp> result = repository.findAllByOrderByDisplayOrderAscIdAsc(Limit.of(2));
 
         Comparator<MyProjExp> expectedOrder = Comparator
                 .comparing(MyProjExp::getDisplayOrder)
                 .thenComparing(MyProjExp::getId);
-        assertThat(result).isSortedAccordingTo(expectedOrder);
+        assertThat(result).hasSize(2).isSortedAccordingTo(expectedOrder);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "zh, chk_my_proj_exp_summary_zh_length",
+            "en, chk_my_proj_exp_summary_en_length"
+    })
+    void databaseRejectsOversizedSummary(String language, String constraintName) {
+        MyProjExp project = newEntity("长度测试", "Length Test", 7004);
+
+        if ("zh".equals(language)) {
+            project.setSummaryZh("测".repeat(1501));
+        } else {
+            project.setSummaryEn("x".repeat(1501));
+        }
+
+        assertThatThrownBy(() -> repository.saveAndFlush(project))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining(constraintName);
     }
 
     private MyProjExp newEntity(String titleZh, String titleEn, int displayOrder) {

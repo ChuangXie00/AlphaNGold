@@ -5,12 +5,13 @@ import com.ang.backend.repo.MyProjExpRepository;
 import com.ang.backend.service.MyProjExpService;
 import com.ang.backend.service.dto.in.MyProjExpInDTO;
 import com.ang.backend.service.dto.out.MyProjExpOutDTO;
-import com.ang.backend.repo.MyProjExpRepository;
 import com.ang.backend.repo.model.MyProjExp;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Limit;
+
 
 import java.util.List;
 
@@ -23,7 +24,8 @@ public class MyProjExpServiceImpl implements MyProjExpService {
 
     @Override
     public List<MyProjExpOutDTO> findAll() {
-        return myProjRepo.findAllByOrderByDisplayOrderAscIdAsc()
+        // TODO: 临时处理手段, 最多返回前100条。后续改为分页查询，并同步调整API和前端展示
+        return myProjRepo.findAllByOrderByDisplayOrderAscIdAsc(Limit.of(100))
                 .stream()
                 .map(this::toOutDTO)
                 .toList();

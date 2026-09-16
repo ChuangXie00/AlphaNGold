@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Limit;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -40,13 +41,13 @@ class MyProjExpServiceImplTest {
     void findAllReturnsRepositoryResultsAsDtos() {
         MyProjExp first = entity(1L, "项目一", "Project One", 1);
         MyProjExp second = entity(2L, "项目二", "Project Two", 2);
-        when(repository.findAllByOrderByDisplayOrderAscIdAsc())
+        when(repository.findAllByOrderByDisplayOrderAscIdAsc(Limit.of(100)))
                 .thenReturn(List.of(first, second));
 
         List<MyProjExpOutDTO> result = service.findAll();
 
         assertThat(result).containsExactly(toExpectedDto(first), toExpectedDto(second));
-        verify(repository).findAllByOrderByDisplayOrderAscIdAsc();
+        verify(repository).findAllByOrderByDisplayOrderAscIdAsc(Limit.of(100));
     }
 
     @Test

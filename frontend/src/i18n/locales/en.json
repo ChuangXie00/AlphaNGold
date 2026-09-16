@@ -90,7 +90,8 @@
       "timeout": "The request took too long. Please try again.",
       "unavailable": "Projects are temporarily unavailable. Please try again later.",
       "invalidResponse": "Project data could not be loaded correctly. Please try again later.",
-      "unknown": "Something went wrong while loading projects. Please try again."
+      "unknown": "Something went wrong while loading projects. Please try again.",
+      "rateLimited": "Too many requests, please try again later."
     }
   }
 }

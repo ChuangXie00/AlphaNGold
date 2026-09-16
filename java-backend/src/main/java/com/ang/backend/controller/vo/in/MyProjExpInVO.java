@@ -14,9 +14,11 @@ public record MyProjExpInVO(
         String titleEn,
 
         @NotBlank
+        @Size(max = 1500)
         String summaryZh,
 
         @NotBlank
+        @Size(max = 1500)
         String summaryEn,
 
         @NotBlank

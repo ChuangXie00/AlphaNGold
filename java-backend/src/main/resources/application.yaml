@@ -2,7 +2,42 @@ spring:
   application:
     name: alphangold-java-backend
 
+  transaction:
+    default-timeout: 5s
+
+
+server:
+  # 当前不信任请求中的 Forwarded / X-Forwarded-*。
+  forward-headers-strategy: none
+  max-http-request-header-size: 8KB
+
+  tomcat:
+    threads:
+      max: 32
+      min-spare: 2
+      max-queue-capacity: 64
+
+    max-connections: 128
+    accept-count: 64
+    connection-timeout: 10s
+    keep-alive-timeout: 5s
+    max-swallow-size: 64KB
+
+    accesslog:
+      enabled: false
+
 app:
   write-enabled: ${WRITE_ENABLED:false}
+
   cors:
     allowed-origins: ""
+
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:false}
+    burst: 10
+    per-second: 1
+    max-clients: 10000
+    idle-seconds: 600
+
+  http:
+    max-json-bytes: 65536

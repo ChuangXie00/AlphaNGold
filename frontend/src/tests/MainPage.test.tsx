@@ -294,4 +294,20 @@ describe('MainPage', () => {
       expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     },
   )
+
+  it.each([
+    ['en', 'Too many requests, please try again later.'],
+    ['zh-CN', '访问较频繁，请稍后重试。']
+  ])('shows the rate-limit message in %s', async (language, message) => {
+    await i18n.changeLanguage(language)
+
+    getProjectsMock.mockRejectedValue(
+      new ApiClientError('HTTP', 'Internal detail', 429),
+    )
+
+    render(<MainPage />)
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(message)
+    expect(screen.queryByText('Internal detail')).not.toBeInTheDocument()
+  })
 })

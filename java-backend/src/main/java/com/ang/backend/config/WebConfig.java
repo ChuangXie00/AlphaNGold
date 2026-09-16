@@ -8,6 +8,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.handler.MappedInterceptor;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -101,6 +102,32 @@ public class WebConfig implements WebMvcConfigurer {
                 );
             }
         }
+    }
+
+    // TODO: 替换请求保护实现时，同步调整此处注册、相关配置及测试。
+    // 如果仅将限流迁移到网关，不要连带删除仍需保留的其他请求保护。
+    @Bean
+    static MappedInterceptor apiRequestLimits(Environment environment) {
+        return new MappedInterceptor(
+                new String[]{"/api/**"},
+                new ApiRequestInterceptor(
+                        environment.getProperty(
+                                "app.rate-limit.enabled", Boolean.class, false
+                        ),
+                        environment.getProperty(
+                                "app.rate-limit.burst", Integer.class, 10
+                        ),
+                        environment.getProperty(
+                                "app.rate-limit.per-second", Double.class, 1.0
+                        ),
+                        environment.getProperty(
+                                "app.rate-limit.max-clients", Integer.class, 10000
+                        ),
+                        environment.getProperty(
+                                "app.rate-limit.idle-seconds", Long.class, 600L
+                        )
+                )
+        );
     }
 
     @Override
